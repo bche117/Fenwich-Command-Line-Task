@@ -1,0 +1,101 @@
+import prettytable
+import os
+
+
+# Help Action
+def instruction():
+    print("Command 1：{code}                                        {instruction}".format(code="Stats.exe help", instruction="Display this usage guide."))
+    print("Command 2：{code}                           {instruction}".format(code="Stats.exe summary stats.txt", instruction="Summarise the data in stats.txt."))
+    print("Command 3：{code}         {instruction}".format(code="Stats.exe record stats.txt [value 2..value n]", instruction="Save one or more values into stats.txt"))
+
+
+# Record Action
+def recordData(commandArr):
+    fileName = commandArr[2]
+    count = len(commandArr) - 3
+    if ".txt" in fileName:
+        if os.path.isfile(fileName):
+            file = open(fileName, 'a')
+            for i in range(3, len(commandArr)):
+                if represents_float(commandArr[i]):  # check the data type
+                    file.write(commandArr[i] + "\n")  # write one data per line
+                    file.flush()
+        elif not os.path.isfile(fileName):
+            newfile = open(fileName, 'w+')
+            for i in range(3, len(commandArr)):
+                if represents_float(commandArr[i]):  # check the data type
+                    newfile.write(commandArr[i] + "\n")  # write one data per line
+                    newfile.flush()
+    else:
+        instruction()
+
+
+# get data from the file into an Array(myData)
+def getData(myData, fileName):
+    if os.lstat(fileName).st_size != 0:  # check if there is a value in the file "stats.txt"
+        stats = open(fileName)
+        for line in stats:
+            myData.append(line.strip())  # line.strip() can remove "\n" from the string value
+
+
+# Summary Action
+def printData(myData):
+    myTable = prettytable.PrettyTable()
+    dataSum = 0.0
+    count = 0
+    if myData != []:
+        dataMin = float(myData[0])
+        dataMax = float(myData[0])
+        for data in myData:
+            dataSum += float(data)
+            count += 1
+            if float(data) < dataMin:
+                dataMin = float(data)
+            elif float(data) > dataMax:
+                dataMax = float(data)
+        dataAve = dataSum/count
+    else:
+        dataMin = "None"
+        dataMax = "None"
+        dataAve = "None"
+    myTable.header = False
+    myTable.add_row(["# of Entries", count])  # add rows into the table
+    myTable.add_row(["Min. value", dataMin])
+    myTable.add_row(["Max. value", dataMax])
+    myTable.add_row(["Avg. value", dataAve])
+    print(myTable)
+
+
+# Check if a String type represent a float value
+def represents_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+# start from here
+while True:
+    command = input(">")
+    commandArr = command.split(" ")
+    if commandArr[0] == "Stats.exe" and len(commandArr) >= 2:
+        if commandArr[1] == "help" and len(commandArr) == 2:
+            instruction()
+        else:
+                if commandArr[1] == "record" and len(commandArr) > 3:
+                    recordData(commandArr)
+                elif commandArr[1] == "summary" and len(commandArr) == 3:
+                    if os.path.isfile(commandArr[2]):
+                        myData = []
+                        getData(myData, commandArr[2])
+                        printData(myData)
+                    else:
+                        print("File does not exist!")
+                else:
+                    print("Wrong command!")
+                    instruction()
+    else:
+        instruction()
+
+
